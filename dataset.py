@@ -6,9 +6,10 @@ from torchvision.utils import save_image
 import config
 
 class ImagesDataset(Dataset):
-    def __init__(self, root_dir):
+    def __init__(self, root_dir, test_mode=False):
         self.root_dir = root_dir
         self.list_files = os.listdir(self.root_dir)
+        self.test_mode = test_mode
         # print(self.list_files)
 
     def __len__(self):
@@ -22,11 +23,15 @@ class ImagesDataset(Dataset):
         input_image = image[:, half_width:, :]
         target_image = image[:, :half_width, :]
         
-        augmentations = config.both_transform(image=input_image, image0=target_image)
-        input_image, target_image = augmentations["image"], augmentations["image0"]
+        if not self.test_mode:
+            augmentations = config.transform_test(image=input_image, image0=target_image)
+            input_image, target_image = augmentations["image"], augmentations["image0"]
+        else:
+            augmentations = config.both_transform(image=input_image, image0=target_image)
+            input_image, target_image = augmentations["image"], augmentations["image0"]
 
-        input_image = config.transform_only_input(image=input_image)["image"]
-        target_image = config.transform_only_mask(image=target_image)["image"]
+            input_image = config.transform_only_input(image=input_image)["image"]
+            target_image = config.transform_only_mask(image=target_image)["image"]
 
         return input_image, target_image
     
